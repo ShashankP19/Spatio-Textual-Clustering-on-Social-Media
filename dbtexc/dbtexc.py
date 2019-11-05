@@ -32,6 +32,7 @@ def dbtexc(X, Y, eps, n_min, n_max):
     n = len(X)
     m = len(Y)
     current_cluster = 0
+    clusters = []
 
     labels_X = [UNCLUSTERED]*n
     visited_X = [UNVISITED]*n
@@ -49,13 +50,14 @@ def dbtexc(X, Y, eps, n_min, n_max):
 
         if(len(eps_X) >= n_min and len(eps_Y) <= n_max):
             current_cluster += 1
-            expandCluster(point, eps_X, eps_Y, visited_X, visited_Y,
-                          labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max)
+            clusters.append([])
+            clusters = expandCluster(point, eps_X, eps_Y, visited_X, visited_Y,
+                          labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters)
 
-    return labels_X, labels_Y
+    return clusters
 
 
-def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max):
+def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters):
     labels_X[central_point] = current_cluster
 
     index = 0
@@ -73,6 +75,7 @@ def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, l
             eps_Y += irrel
         if labels_X[point] == UNCLUSTERED:
             labels_X[point] = current_cluster
+            clusters[-1].append(X[point])
 
     if len(eps_Y) != 0:
         for point in eps_Y:
@@ -80,6 +83,9 @@ def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, l
                 visited_Y[point] = VISITED
                 if labels_Y[point] == UNCLUSTERED:
                     labels_Y[point] = current_cluster
+                    clusters[-1].append(Y[point])
+
+    return clusters
 
 
 def regionQuery(X, Y, P, eps):
