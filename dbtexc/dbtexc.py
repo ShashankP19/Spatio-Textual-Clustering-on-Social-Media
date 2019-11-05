@@ -91,15 +91,18 @@ def regionQuery(X, Y, P, eps):
     threshold distance eps.
     """
 
-    return findNeighbours(X, P, eps), findNeighbours(Y, P, eps)
+    return findNeighbours(X, X, P, eps), findNeighbours(X, Y, P, eps)
 
 
-def findNeighbours(points, central_point, eps):
+def findNeighbours(rel_points, points, central_point, eps):
     neighbours = []
+
+    # print(rel_points[central_point])
 
     for q in range(0, len(points)):
         # If the distance is below the threshold, add it to the neighbors list
-        if numpy.linalg.norm(points[central_point] - points[q]) < eps:
+        # print(central_point, q)
+        if numpy.linalg.norm(rel_points[central_point] - points[q]) < eps:
             neighbours.append(q)
 
     return neighbours
