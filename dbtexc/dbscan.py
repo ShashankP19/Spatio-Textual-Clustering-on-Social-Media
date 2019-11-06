@@ -56,7 +56,7 @@ def dbscan(D, eps, MinPts):
            clusters = growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters)
     
     # All data has been clustered!
-    return clusters
+    return clusters, labels
 
 
 def growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters):
