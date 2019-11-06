@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mpl_colors
 import sys
 
-eps = 5
+eps = 0.001
 N_min = 3
-N_max = 10
+N_max = 5
+
 markersize = 2
 min_points = 6
 algo_name = ['DBTexC', 'DBScan']
@@ -50,10 +51,10 @@ def main_dbscan():
 def main_dbtexc():
     # Read dataset from file
 
-    relevant = pd.read_csv('HP_relevant.csv')
+    relevant = pd.read_csv('relevant.csv')
     # print(df.head(5))
 
-    irrelevant = pd.read_csv('HP_irrelevant.csv')
+    irrelevant = pd.read_csv('irrelevant.csv')
     # print(df.head(5))
 
     # Get longitude and latitude columns from relevant tweets dataset
