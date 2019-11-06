@@ -1,4 +1,4 @@
-# from dbtexc import dbscan
+from dbtexc.dbscan import dbscan
 from dbtexc.dbtexc import dbtexc
 import pandas as pd
 import numpy as np
@@ -7,9 +7,25 @@ import geopandas as gpd
 from geopandas import GeoDataFrame
 import matplotlib.pyplot as plt
 import matplotlib.colors as mpl_colors
+import sys
+
+eps = 5
+N_min = 3
+N_max = 10
+markersize = 2
+min_points = 6
+algo_name = ['DBTexC', 'DBScan']
 
 
-def main():
+def main_dbscan():
+    data = pd.read_csv('dataset.csv')
+    data_points = data[['longitude', 'latitude']].values
+
+    clusters = dbscan(data_points, eps, min_points)
+    plot_clusters(clusters, 1)
+
+
+def main_dbtexc():
     # Read dataset from file
 
     relevant = pd.read_csv('relevant.csv')
@@ -27,17 +43,18 @@ def main():
     ll_irrelevant = irrelevant[['longitude', 'latitude']]
     ll_irrelevant_values = ll_irrelevant.values
     # print(ll_irrelevant_values[:5])
-
-    eps = 5
-    N_min = 3
-    N_max = 10
     clusters = dbtexc(ll_relevant_values,
                       ll_irrelevant_values, eps, N_min, N_max)
 
+    plot_clusters(clusters, 1)
+
+
+def plot_clusters(clusters, algo):
     world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-    markersize = 2
     colors = plt.get_cmap('jet')(np.linspace(0.0, 1.0, len(clusters)))
     ax = world.plot(figsize=(20, 12), color='#e8e4b3')
+    # print(clusters)
+    # print(len(clusters))
 
     for cluster_id, cluster in enumerate(clusters):
         df = pd.DataFrame(cluster)
@@ -45,12 +62,21 @@ def main():
         gdf = GeoDataFrame(df, geometry=geometry)
         gdf.plot(ax=ax, marker='o', color=mpl_colors.to_hex(
             colors[cluster_id]), markersize=markersize, label=('{} points'.format(len(cluster))))
-    
+
     plt.axis('off')
     plt.legend(loc='best')
-    plt.suptitle('DBTexC Clusters on Twitter Data', fontsize=16)
+    plt.suptitle('{} Clusters on Twitter Data'.format(
+        algo_name[algo]), fontsize=16)
     plt.show()
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) < 2:
+        print('Usage: python3 main.py <algo_id>')
+        for id, algo in enumerate(algo_name):
+            print(id, algo)
+    else:
+        if sys.argv[1] == '0':
+            main_dbtexc()
+        elif(sys.argv[1] == '1'):
+            main_dbscan()

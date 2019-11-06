@@ -17,6 +17,7 @@ def dbscan(D, eps, MinPts):
     #     0 - Means the point hasn't been considered yet.
     # Initially all labels are 0.    
     labels = [0]*len(D)
+    clusters = []
 
     # C is the ID of the current cluster.    
     C = 0
@@ -51,13 +52,14 @@ def dbscan(D, eps, MinPts):
         # seed for a new cluster.    
         else: 
            C += 1
-           growCluster(D, labels, P, NeighborPts, C, eps, MinPts)
+           clusters.append([])
+           clusters = growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters)
     
     # All data has been clustered!
-    return labels
+    return clusters
 
 
-def growCluster(D, labels, P, NeighborPts, C, eps, MinPts):
+def growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters):
     """
     Grow a new cluster with label `C` from the seed point `P`.
     
@@ -76,7 +78,8 @@ def growCluster(D, labels, P, NeighborPts, C, eps, MinPts):
 
     # Assign the cluster label to the seed point.
     labels[P] = C
-    
+    clusters[-1].append(D[P])
+
     # Look at each neighbor of P (neighbors are referred to as Pn). 
     # NeighborPts will be used as a FIFO queue of points to search--that is, it
     # will grow as we discover new branch points for the cluster. The FIFO
@@ -94,11 +97,13 @@ def growCluster(D, labels, P, NeighborPts, C, eps, MinPts):
         # make it a leaf point of cluster C and move on.
         if labels[Pn] == -1:
            labels[Pn] = C
+           clusters[-1].append(D[Pn])
         
         # Otherwise, if Pn isn't already claimed, claim it as part of C.
         elif labels[Pn] == 0:
             # Add Pn to cluster C (Assign cluster label C).
             labels[Pn] = C
+            clusters[-1].append(D[Pn])
             
             # Find all the neighbors of Pn
             PnNeighborPts = regionQuery(D, Pn, eps)
@@ -117,7 +122,7 @@ def growCluster(D, labels, P, NeighborPts, C, eps, MinPts):
         i += 1        
     
     # We've finished growing cluster C!
-
+    return clusters
 
 def regionQuery(D, P, eps):
     """
