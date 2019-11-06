@@ -54,11 +54,12 @@ def dbtexc(X, Y, eps, n_min, n_max):
             clusters = expandCluster(point, eps_X, eps_Y, visited_X, visited_Y,
                           labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters)
 
-    return clusters
+    return clusters, labels_X, labels_Y
 
 
 def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters):
     labels_X[central_point] = current_cluster
+    clusters[-1].append(X[central_point])
 
     index = 0
     while index < len(eps_X):
@@ -108,6 +109,7 @@ def findNeighbours(rel_points, points, central_point, eps):
     for q in range(0, len(points)):
         # If the distance is below the threshold, add it to the neighbors list
         # print(central_point, q)
+        # print(numpy.linalg.norm(rel_points[central_point] - points[q]))
         if numpy.linalg.norm(rel_points[central_point] - points[q]) < eps:
             neighbours.append(q)
 
