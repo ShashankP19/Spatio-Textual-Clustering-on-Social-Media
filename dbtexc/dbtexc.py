@@ -1,6 +1,10 @@
 
 import numpy
 
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+
 # Reserved Labels for assigning clusters
 NOISE = -1
 UNCLUSTERED = 0
@@ -10,7 +14,7 @@ VISITED = True
 UNVISITED = False
 
 
-def dbtexc(X, Y, eps, n_min, n_max):
+def dbtexc(X, Y, eps, n_min, n_max, tweet_similarity_threshold):
     """
     Implementation of DBSTexC: Density-Based Spatio-Textual Clustering on Twitter
     See https://dl.acm.org/citation.cfm?id=3110096
@@ -46,18 +50,18 @@ def dbtexc(X, Y, eps, n_min, n_max):
 
         visited_X[point] = VISITED
 
-        eps_X, eps_Y = regionQuery(X, Y, point, eps)
+        eps_X, eps_Y = regionQuery(X, Y, point, eps, tweet_similarity_threshold)
 
         if(len(eps_X) >= n_min and len(eps_Y) <= n_max):
             current_cluster += 1
             clusters.append([])
             clusters = expandCluster(point, eps_X, eps_Y, visited_X, visited_Y,
-                          labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters)
+                                     labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters, tweet_similarity_threshold)
 
     return clusters, labels_X, labels_Y
 
 
-def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters):
+def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, labels_Y, X, Y, current_cluster, eps, n_min, n_max, clusters, tweet_similarity_threshold):
     labels_X[central_point] = current_cluster
     clusters[-1].append(X[central_point])
 
@@ -70,7 +74,7 @@ def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, l
             continue
         visited_X[point] = VISITED
 
-        rel, irrel = regionQuery(X, Y, point, eps)
+        rel, irrel = regionQuery(X, Y, point, eps, tweet_similarity_threshold)
         if(len(rel) >= n_min and len(irrel) <= n_max):
             eps_X += rel
             eps_Y += irrel
@@ -89,7 +93,7 @@ def expandCluster(central_point, eps_X, eps_Y, visited_X, visited_Y, labels_X, l
     return clusters
 
 
-def regionQuery(X, Y, P, eps):
+def regionQuery(X, Y, P, eps, tweet_similarity_threshold):
     """
     Find all points in dataset X and Y within distance eps of point P.
 
@@ -98,10 +102,10 @@ def regionQuery(X, Y, P, eps):
     threshold distance eps.
     """
 
-    return findNeighbours(X, X, P, eps), findNeighbours(X, Y, P, eps)
+    return findNeighbours(X, X, P, eps, tweet_similarity_threshold), findNeighbours(X, Y, P, eps, tweet_similarity_threshold)
 
 
-def findNeighbours(rel_points, points, central_point, eps):
+def findNeighbours(rel_points, points, central_point, eps, tweet_similarity_threshold):
     neighbours = []
 
     # print(rel_points[central_point])
@@ -110,7 +114,45 @@ def findNeighbours(rel_points, points, central_point, eps):
         # If the distance is below the threshold, add it to the neighbors list
         # print(central_point, q)
         # print(numpy.linalg.norm(rel_points[central_point] - points[q]))
-        if numpy.linalg.norm(rel_points[central_point] - points[q]) < eps:
-            neighbours.append(q)
+        # print(rel_points[central_point][-1])
+        # print(points[q][-1])
+        if numpy.linalg.norm(rel_points[central_point][0:2] - points[q][0:2]) < eps:
+            if tweet_similarity_threshold == 0 or similarity(rel_points[central_point][-1], points[q][-1]) >= tweet_similarity_threshold :
+                neighbours.append(q)
 
     return neighbours
+
+
+def similarity(a, b):
+    # tokenization
+    X_list = word_tokenize(a)
+    Y_list = word_tokenize(b)
+
+    # sw contains the list of stopwords
+    sw = stopwords.words('english')
+    l1 = []
+    l2 = []
+
+    # remove stop words from string
+    X_set = {w for w in X_list if not w in sw}
+    Y_set = {w for w in Y_list if not w in sw}
+
+    # form a set containing keywords of both strings
+    rvector = X_set.union(Y_set)
+    for w in rvector:
+        if w in X_set:
+            l1.append(1)  # create a vector
+        else:
+            l1.append(0)
+        if w in Y_set:
+            l2.append(1)
+        else:
+            l2.append(0)
+
+    c = 0
+
+    # cosine formula
+    for i in range(len(rvector)):
+        c += l1[i]*l2[i]
+    cosine = c / float((sum(l1)*sum(l2))**0.5)
+    return cosine

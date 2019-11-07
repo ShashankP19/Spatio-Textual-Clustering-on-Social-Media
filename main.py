@@ -15,7 +15,8 @@ N_max = 5
 
 markersize = 2
 min_points = 6
-algo_name = ['DBTexC', 'DBScan']
+algo_name = ['DBTexC', 'DBScan', 'DBTextC with Tweet Text Similarity']
+tweet_similarity_threshold = 0.25
 
 
 def get_f1_score(labels_rel, labels_irrel, num_clusters):
@@ -48,7 +49,7 @@ def main_dbscan():
     plot_clusters(clusters, 1)
 
 
-def main_dbtexc():
+def main_dbtexc(tweet_similarity_threshold):
     # Read dataset from file
 
     relevant = pd.read_csv('relevant.csv')
@@ -58,16 +59,16 @@ def main_dbtexc():
     # print(df.head(5))
 
     # Get longitude and latitude columns from relevant tweets dataset
-    ll_relevant = relevant[['longitude', 'latitude']]
+    ll_relevant = relevant[['longitude', 'latitude', 'text']]
     ll_relevant_values = ll_relevant.values
     # print(ll_relevant_values[:5])
 
     # Get longitude and latitude columns from irrelevant tweets dataset
-    ll_irrelevant = irrelevant[['longitude', 'latitude']]
+    ll_irrelevant = irrelevant[['longitude', 'latitude', 'text']]
     ll_irrelevant_values = ll_irrelevant.values
     # print(ll_irrelevant_values[:5])
     clusters, labels_rel, labels_irrel = dbtexc(ll_relevant_values,
-                                                ll_irrelevant_values, eps, N_min, N_max)
+                                                ll_irrelevant_values, eps, N_min, N_max, tweet_similarity_threshold)
 
     num_clusters = len(clusters)
     print("Number of Clusters: ", num_clusters)
@@ -112,6 +113,8 @@ if __name__ == "__main__":
             print(id, algo)
     else:
         if sys.argv[1] == '0':
-            main_dbtexc()
+            main_dbtexc(0)
         elif(sys.argv[1] == '1'):
             main_dbscan()
+        elif(sys.argv[1] == '2'):
+            main_dbtexc(tweet_similarity_threshold)
