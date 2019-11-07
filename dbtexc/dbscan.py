@@ -1,6 +1,42 @@
 import numpy
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
-def dbscan(D, eps, MinPts):
+def similarity(a, b):
+    # tokenization
+    X_list = word_tokenize(a)
+    Y_list = word_tokenize(b)
+
+    # sw contains the list of stopwords
+    sw = stopwords.words('english')
+    l1 = []
+    l2 = []
+
+    # remove stop words from string
+    X_set = {w for w in X_list if not w in sw}
+    Y_set = {w for w in Y_list if not w in sw}
+
+    # form a set containing keywords of both strings
+    rvector = X_set.union(Y_set)
+    for w in rvector:
+        if w in X_set:
+            l1.append(1)  # create a vector
+        else:
+            l1.append(0)
+        if w in Y_set:
+            l2.append(1)
+        else:
+            l2.append(0)
+
+    c = 0
+
+    # cosine formula
+    for i in range(len(rvector)):
+        c += l1[i]*l2[i]
+    cosine = c / float((sum(l1)*sum(l2))**0.5)
+    return cosine
+
+def dbscan(D, eps, MinPts, tweet_similarity_threshold):
     """
     Cluster the dataset `D` using the DBSCAN algorithm.
     
@@ -38,7 +74,7 @@ def dbscan(D, eps, MinPts):
            continue
         
         # Find all of P's neighboring points.
-        NeighborPts = regionQuery(D, P, eps)
+        NeighborPts = regionQuery(D, P, eps, tweet_similarity_threshold)
         
         # If the number is below MinPts, this point is noise. 
         # This is the only condition under which a point is labeled 
@@ -53,13 +89,13 @@ def dbscan(D, eps, MinPts):
         else: 
            C += 1
            clusters.append([])
-           clusters = growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters)
+           clusters = growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters, tweet_similarity_threshold)
     
     # All data has been clustered!
     return clusters, labels
 
 
-def growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters):
+def growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters, tweet_similarity_threshold):
     """
     Grow a new cluster with label `C` from the seed point `P`.
     
@@ -106,7 +142,7 @@ def growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters):
             clusters[-1].append(D[Pn])
             
             # Find all the neighbors of Pn
-            PnNeighborPts = regionQuery(D, Pn, eps)
+            PnNeighborPts = regionQuery(D, Pn, eps, tweet_similarity_threshold)
             
             # If Pn has at least MinPts neighbors, it's a branch point!
             # Add all of its neighbors to the FIFO queue to be searched. 
@@ -124,7 +160,7 @@ def growCluster(D, labels, P, NeighborPts, C, eps, MinPts, clusters):
     # We've finished growing cluster C!
     return clusters
 
-def regionQuery(D, P, eps):
+def regionQuery(D, P, eps, tweet_similarity_threshold):
     """
     Find all points in dataset `D` within distance `eps` of point `P`.
     
@@ -138,7 +174,8 @@ def regionQuery(D, P, eps):
     for Pn in range(0, len(D)):
         
         # If the distance is below the threshold, add it to the neighbors list.
-        if numpy.linalg.norm(D[P] - D[Pn]) < eps:
-           neighbors.append(Pn)
+        if numpy.linalg.norm(D[P][0:2] - D[Pn][0:2]) < eps:
+            if tweet_similarity_threshold == 0 or similarity(D[P][-1], D[Pn][-1]) >= tweet_similarity_threshold :
+                neighbors.append(Pn)
             
     return neighbors

@@ -15,7 +15,7 @@ N_max = 8
 
 markersize = 5
 min_points = 6
-algo_name = ['DBTexC', 'DBScan', 'DBTextC with Tweet Text Similarity']
+algo_name = ['DBTexC', 'DBScan', 'DBTextC with Tweet Text Similarity', 'DBScan with Tweet Text Similarity']
 tweet_similarity_threshold = 0.25
 
 def get_f1_score(labels_rel, labels_irrel, num_clusters):
@@ -40,7 +40,7 @@ def get_f1_score(labels_rel, labels_irrel, num_clusters):
     return f1_score
 
 
-def main_dbscan():
+def main_dbscan(tweet_similarity_threshold):
     # data = pd.read_csv('dataset.csv')
     
     relevant_df = pd.read_csv('relevant.csv')
@@ -54,9 +54,9 @@ def main_dbscan():
     data = pd.concat([relevant_df, irrelevant_df], ignore_index=True, sort =False)
     data['is_relevant'] = is_relevant
     
-    data_points = data[['longitude', 'latitude']].values
+    data_points = data[['longitude', 'latitude', 'text']].values
 
-    clusters, labels = dbscan(data_points, eps, min_points)
+    clusters, labels = dbscan(data_points, eps, min_points, tweet_similarity_threshold)
 
     # print(len(labels))
     # for i in range(len(labels)):
@@ -155,6 +155,8 @@ if __name__ == "__main__":
         if sys.argv[1] == '0':
             main_dbtexc(0)
         elif(sys.argv[1] == '1'):
-            main_dbscan()
+            main_dbscan(0)
         elif(sys.argv[1] == '2'):
             main_dbtexc(tweet_similarity_threshold)
+        elif(sys.argv[1] == '3'):
+            main_dbscan(tweet_similarity_threshold)
