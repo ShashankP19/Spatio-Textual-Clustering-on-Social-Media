@@ -10,11 +10,11 @@ import matplotlib.colors as mpl_colors
 import sys
 
 eps = 0.01
-N_min = 4
+N_min = 2
 N_max = 8
+min_points = N_min
 
 markersize = 5
-min_points = 6
 algo_name = ['DBTexC', 'DBScan', 'DBTextC with Tweet Text Similarity', 'DBScan with Tweet Text Similarity']
 tweet_similarity_threshold = 0.25
 
@@ -75,16 +75,16 @@ def main_dbscan(tweet_similarity_threshold):
     print("Number of Clusters: ", num_clusters)
 
     print("Length of Relevant tweets' classes: ", len(labels_rel))
-    print("Relevant tweets' classes: ", labels_rel)
+    # print("Relevant tweets' classes: ", labels_rel)
 
     print("Length of Irrelevant tweets' classes: ", len(labels_irrel))
-    print("Irrelevant tweets' classes: ", labels_irrel)
+    # print("Irrelevant tweets' classes: ", labels_irrel)
 
     f1_score = get_f1_score(labels_rel, labels_irrel, num_clusters)
     print("F1-score: ", f1_score)
 
-    plot_clusters(clusters, 1)
-
+    # plot_clusters(clusters, 1)
+    return clusters
 
 def main_dbtexc(tweet_similarity_threshold):
     # Read dataset from file
@@ -111,16 +111,16 @@ def main_dbtexc(tweet_similarity_threshold):
     print("Number of Clusters: ", num_clusters)
 
     print("Length of Relevant tweets' classes: ", len(labels_rel))
-    print("Relevant tweets' classes: ", labels_rel)
+    # print("Relevant tweets' classes: ", labels_rel)
 
     print("Length of Irrelevant tweets' classes: ", len(labels_irrel))
-    print("Irrelevant tweets' classes: ", labels_irrel)
+    # print("Irrelevant tweets' classes: ", labels_irrel)
 
     f1_score = get_f1_score(labels_rel, labels_irrel, num_clusters)
     print("F1-score: ", f1_score)
 
-    plot_clusters(clusters, 0)
-
+    # plot_clusters(clusters, 0)
+    return clusters
 
 def plot_clusters(clusters, algo):
     world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
@@ -147,16 +147,20 @@ def plot_clusters(clusters, algo):
 
 
 if __name__ == "__main__":
+    clusters=[]
     if len(sys.argv) < 2:
         print('Usage: python3 main.py <algo_id>')
         for id, algo in enumerate(algo_name):
             print(id, algo)
     else:
+        print('Using {}'.format(algo_name[int(sys.argv[1])]))
         if sys.argv[1] == '0':
-            main_dbtexc(tweet_similarity_threshold)
+            clusters=main_dbtexc(tweet_similarity_threshold)
         elif(sys.argv[1] == '1'):
-            main_dbscan(tweet_similarity_threshold)
+            clusters=main_dbscan(tweet_similarity_threshold)
         elif(sys.argv[1] == '2'):
-            main_dbtexc(0)
+            clusters=main_dbtexc(0)
         elif(sys.argv[1] == '3'):
-            main_dbscan(0)
+            clusters=main_dbscan(0)
+
+    # plot_clusters(clusters, int(sys.argv[1]))

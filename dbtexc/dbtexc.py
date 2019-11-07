@@ -102,7 +102,7 @@ def regionQuery(X, Y, P, eps, tweet_similarity_threshold):
     threshold distance eps.
     """
 
-    return findNeighbours(X, X, P, eps, tweet_similarity_threshold), findNeighbours(X, Y, P, eps, tweet_similarity_threshold)
+    return findNeighbours(X, X, P, eps, 0), findNeighbours(X, Y, P, eps, tweet_similarity_threshold)
 
 
 def findNeighbours(rel_points, points, central_point, eps, tweet_similarity_threshold):
