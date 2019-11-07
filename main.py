@@ -9,15 +9,14 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mpl_colors
 import sys
 
-eps = 0.001
-N_min = 3
-N_max = 5
+eps = 0.01
+N_min = 4
+N_max = 8
 
-markersize = 2
+markersize = 5
 min_points = 6
 algo_name = ['DBTexC', 'DBScan', 'DBTextC with Tweet Text Similarity']
 tweet_similarity_threshold = 0.25
-
 
 def get_f1_score(labels_rel, labels_irrel, num_clusters):
 
@@ -42,10 +41,48 @@ def get_f1_score(labels_rel, labels_irrel, num_clusters):
 
 
 def main_dbscan():
-    data = pd.read_csv('dataset.csv')
+    # data = pd.read_csv('dataset.csv')
+    
+    relevant_df = pd.read_csv('relevant.csv')
+    # print(df.head(5))
+
+    irrelevant_df = pd.read_csv('irrelevant.csv')
+    # print(df.head(5))
+
+    is_relevant = [True] * relevant_df.shape[0] + [False] * irrelevant_df.shape[0]
+
+    data = pd.concat([relevant_df, irrelevant_df], ignore_index=True, sort =False)
+    data['is_relevant'] = is_relevant
+    
     data_points = data[['longitude', 'latitude']].values
 
-    clusters = dbscan(data_points, eps, min_points)
+    clusters, labels = dbscan(data_points, eps, min_points)
+
+    # print(len(labels))
+    # for i in range(len(labels)):
+    #     print(labels[i])
+
+    labels_rel = []
+    labels_irrel = []
+
+    for i in range(len(labels)):
+        if(data['is_relevant'][i] == True):
+            labels_rel.append(labels[i])
+        else:
+            labels_irrel.append(labels[i]) 
+
+    num_clusters = len(clusters)
+    print("Number of Clusters: ", num_clusters)
+
+    print("Length of Relevant tweets' classes: ", len(labels_rel))
+    print("Relevant tweets' classes: ", labels_rel)
+
+    print("Length of Irrelevant tweets' classes: ", len(labels_irrel))
+    print("Irrelevant tweets' classes: ", labels_irrel)
+
+    f1_score = get_f1_score(labels_rel, labels_irrel, num_clusters)
+    print("F1-score: ", f1_score)
+
     plot_clusters(clusters, 1)
 
 
@@ -82,7 +119,7 @@ def main_dbtexc(tweet_similarity_threshold):
     f1_score = get_f1_score(labels_rel, labels_irrel, num_clusters)
     print("F1-score: ", f1_score)
 
-    plot_clusters(clusters, 1)
+    plot_clusters(clusters, 0)
 
 
 def plot_clusters(clusters, algo):
@@ -92,10 +129,13 @@ def plot_clusters(clusters, algo):
     # print(clusters)
     # print(len(clusters))
 
+    # Restrict to Europe
+    # ax = world[world.continent == 'Europe'].plot(color='white', edgecolor='black', figsize=(20, 12))
     for cluster_id, cluster in enumerate(clusters):
         df = pd.DataFrame(cluster)
         geometry = [Point(p) for p in zip(df[0], df[1])]
         gdf = GeoDataFrame(df, geometry=geometry)
+        # print(gdf.head())
         gdf.plot(ax=ax, marker='o', color=mpl_colors.to_hex(
             colors[cluster_id]), markersize=markersize, label=('{} points'.format(len(cluster))))
 
