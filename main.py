@@ -153,10 +153,10 @@ if __name__ == "__main__":
             print(id, algo)
     else:
         if sys.argv[1] == '0':
-            main_dbtexc(0)
-        elif(sys.argv[1] == '1'):
-            main_dbscan(0)
-        elif(sys.argv[1] == '2'):
             main_dbtexc(tweet_similarity_threshold)
-        elif(sys.argv[1] == '3'):
+        elif(sys.argv[1] == '1'):
             main_dbscan(tweet_similarity_threshold)
+        elif(sys.argv[1] == '2'):
+            main_dbtexc(0)
+        elif(sys.argv[1] == '3'):
+            main_dbscan(0)
