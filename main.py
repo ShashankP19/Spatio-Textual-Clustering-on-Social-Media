@@ -10,8 +10,8 @@ import matplotlib.colors as mpl_colors
 import sys
 
 eps = 0.01
-N_min = 2
-N_max = 8
+N_min = 4
+N_max = 9
 min_points = N_min
 
 markersize = 5
@@ -154,13 +154,13 @@ if __name__ == "__main__":
             print(id, algo)
     else:
         print('Using {}'.format(algo_name[int(sys.argv[1])]))
-        if sys.argv[1] == '0':
-            clusters=main_dbtexc(tweet_similarity_threshold)
-        elif(sys.argv[1] == '1'):
-            clusters=main_dbscan(tweet_similarity_threshold)
-        elif(sys.argv[1] == '2'):
+        if(sys.argv[1] == '0'):
             clusters=main_dbtexc(0)
-        elif(sys.argv[1] == '3'):
+        elif(sys.argv[1] == '1'):
             clusters=main_dbscan(0)
+        elif sys.argv[1] == '2':
+            clusters=main_dbtexc(tweet_similarity_threshold)
+        elif(sys.argv[1] == '3'):
+            clusters=main_dbscan(tweet_similarity_threshold)
 
-    # plot_clusters(clusters, int(sys.argv[1]))
+    plot_clusters(clusters, int(sys.argv[1]))
